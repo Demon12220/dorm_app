@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <h1 class="display-5"><i class="fas fa-chart-line me-3"></i>Панель управления</h1>
+        <p class="lead text-muted">Обзор текущего состояния общежития и доступ к основным функциям</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h5 class="card-title">Жильцы</h5>
+                <p class="card-text">Управление данными о жильцах общежития</p>
+                <div class="mt-auto">
+                    <a href="{{ url_for('residents.index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-1"></i>Перейти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <div class="card-icon">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <h5 class="card-title">Комнаты</h5>
+                <p class="card-text">Управление информацией о комнатах общежития</p>
+                <div class="mt-auto">
+                    <a href="{{ url_for('rooms.index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-1"></i>Перейти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <div class="card-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h5 class="card-title">Платежи</h5>
+                <p class="card-text">Управление платежами и финансовыми операциями</p>
+                <div class="mt-auto">
+                    <a href="{{ url_for('payments.index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-1"></i>Перейти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>Статистика заселения
+            </div>
+            <div class="card-body">
+                {% if floors_stats and floors_stats|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover stats-table">
+                        <thead>
+                            <tr class="text-center">
+                                <th><i class="fas fa-building me-1"></i> Этаж</th>
+                                <th><i class="fas fa-door-closed me-1"></i> Комнат</th>
+                                <th><i class="fas fa-key me-1"></i> Занято</th>
+                                <th><i class="fas fa-door-open me-1"></i> Свободно</th>
+                                <th><i class="fas fa-users me-1"></i> Жильцов</th>
+                                <th><i class="fas fa-chart-pie me-1"></i> Заполненность</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for floor in floors_stats %}
+                            <tr class="text-center">
+                                <td class="fw-bold">{{ floor.floor }}</td>
+                                <td>{{ floor.total }}</td>
+                                <td><span class="badge occupied-badge">{{ floor.occupied }}</span></td>
+                                <td><span class="badge vacant-badge">{{ floor.vacant }}</span></td>
+                                <td>{{ floor.residents_count if floor.residents_count is defined else 0 }}</td>
+                                <td>
+                                    {% set capacity = floor.total * 2 %}
+                                    {% set residents = floor.residents_count if floor.residents_count is defined else 0 %}
+                                    {% set percentage = (residents / capacity * 100)|round if capacity > 0 else 0 %}
+                                    
+                                    {% set progress_bar_class = 'bg-success' %}
+                                    {% if percentage < 30 %}
+                                        {% set progress_bar_class = 'bg-danger' %}
+                                    {% elif percentage < 70 %}
+                                        {% set progress_bar_class = 'bg-warning' %}
+                                    {% endif %}
+                                    
+                                    <div class="occupancy-wrapper">
+                                        <div class="occupancy-info">
+                                            <span class="percentage-label">{{ percentage }}%</span>
+                                            <span class="capacity-label">({{ residents }}/{{ capacity }})</span>
+                                        </div>
+                                        <div class="progress">
+                                            <div class="progress-bar {{ progress_bar_class }}" 
+                                                role="progressbar" 
+                                                style="width: {{ percentage }}%"
+                                                aria-valuenow="{{ percentage }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="text-center summary-row">
+                                <th>Итого:</th>
+                                <th>{{ floors_stats|sum(attribute='total') }}</th>
+                                <th>{{ floors_stats|sum(attribute='occupied') }}</th>
+                                <th>{{ floors_stats|sum(attribute='vacant') }}</th>
+                                <th>{{ floors_stats|sum(attribute='residents_count') if floors_stats[0].residents_count is defined else 0 }}</th>
+                                <th>
+                                    {% set total_capacity = floors_stats|sum(attribute='total') * 2 %}
+                                    {% set total_residents = floors_stats|sum(attribute='residents_count') if floors_stats[0].residents_count is defined else 0 %}
+                                    {% set total_percentage = (total_residents / total_capacity * 100)|round if total_capacity > 0 else 0 %}
+                                    
+                                    {% set total_progress_bar_class = 'bg-success' %}
+                                    {% if total_percentage < 30 %}
+                                        {% set total_progress_bar_class = 'bg-danger' %}
+                                    {% elif total_percentage < 70 %}
+                                        {% set total_progress_bar_class = 'bg-warning' %}
+                                    {% endif %}
+                                    
+                                    <div class="occupancy-wrapper">
+                                        <div class="occupancy-info">
+                                            <span class="percentage-label">{{ total_percentage }}%</span>
+                                            <span class="capacity-label">({{ total_residents }}/{{ total_capacity }})</span>
+                                        </div>
+                                        <div class="progress">
+                                            <div class="progress-bar {{ total_progress_bar_class }}" 
+                                                role="progressbar" 
+                                                style="width: {{ total_percentage }}%"
+                                                aria-valuenow="{{ total_percentage }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Нет данных для отображения статистики. Добавьте комнаты и жильцов.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="fas fa-clipboard-list me-2"></i>Последние действия
+            </div>
+            <div class="card-body">
+                {% if recent_actions and recent_actions|length > 0 %}
+                <ul class="list-group list-group-flush">
+                    {% for action in recent_actions %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="{{ action.icon }} me-2 {{ action.color }}"></i>
+                            {% if action.type == 'check_in' %}
+                            <span>Заселение: {{ action.resident.last_name }} {{ action.resident.first_name }}</span>
+                            {% elif action.type == 'check_out' %}
+                            <span>Выселение: {{ action.resident.last_name }} {{ action.resident.first_name }}</span>
+                            {% elif action.type == 'payment' %}
+                            <span>Оплата: {{ action.resident.last_name }} {{ action.resident.first_name }} ({{ action.amount }} руб.)</span>
+                            {% endif %}
+                        </div>
+                        <span class="badge bg-light text-dark">
+                            {% if action.date and action.date.date and action.date.date() == today %}
+                            Сегодня, {{ action.date.strftime('%H:%M') }}
+                            {% elif action.date and action.date.date and action.date.date() == yesterday %}
+                            Вчера, {{ action.date.strftime('%H:%M') }}
+                            {% elif action.date %}
+                            {{ action.date.strftime('%d.%m.%Y') }}
+                            {% else %}
+                            Дата не указана
+                            {% endif %}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Нет данных о последних действиях. Начните работу с системой.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Главные стили карточек */
+    .card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        font-weight: 600;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 12px 16px;
+    }
+    
+    /* Стили таблицы статистики */
+    .stats-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    .stats-table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-top: none;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .stats-table td {
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+    
+    .stats-table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    /* Бейджи для статусов */
+    .occupied-badge, .vacant-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .occupied-badge {
+        background-color: #4361ee;
+        color: white;
+    }
+    
+    .vacant-badge {
+        background-color: #2ec4b6;
+        color: white;
+    }
+    
+    /* Индикатор заполненности */
+    .occupancy-wrapper {
+        width: 100%;
+    }
+    
+    .occupancy-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    
+    .percentage-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .capacity-label {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+    }
+    
+    /* Итоговая строка */
+    .summary-row {
+        background-color: #f3f4f6;
+        font-weight: 700;
+    }
+    
+    .summary-row th {
+        border-top: 2px solid #dee2e6;
+        color: #495057;
+    }
+    
+    /* Стили для мобильных устройств */
+    @media (max-width: 768px) {
+        .table-responsive {
+            margin-bottom: 0;
+            border: none;
+        }
+        
+        .occupancy-info {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .capacity-label {
+            margin-top: 2px;
+        }
+    }
+</style>
+{% endblock %}

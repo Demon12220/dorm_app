@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron text-center">
+    <h1 class="display-4"><i class="fas fa-building me-3"></i>АИС "Общежитие"</h1>
+    <p class="lead">Автоматизированная информационная система управления общежитием</p>
+    <hr class="my-4 bg-white">
+    <p>Система предназначена для учета жильцов, комнат и платежей в общежитии.</p>
+    {% if not current_user.is_authenticated %}
+    <p class="lead mt-4">
+        <a class="btn btn-light btn-lg" href="{{ url_for('auth.login') }}" role="button">
+            <i class="fas fa-sign-in-alt me-2"></i>Войти в систему
+        </a>
+    </p>
+    {% else %}
+    <p class="lead mt-4">
+        <a class="btn btn-light btn-lg" href="{{ url_for('main.dashboard') }}" role="button">
+            <i class="fas fa-chart-line me-2"></i>Перейти в панель управления
+        </a>
+    </p>
+    {% endif %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-users fa-4x mb-3 text-primary"></i>
+                <h5 class="card-title">Учет жильцов</h5>
+                <p class="card-text">Полная информация о всех проживающих в общежитии, включая персональные данные и историю проживания.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-door-open fa-4x mb-3 text-primary"></i>
+                <h5 class="card-title">Управление комнатами</h5>
+                <p class="card-text">Распределение комнат, контроль заселения и выселения, мониторинг доступности помещений.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-money-bill-wave fa-4x mb-3 text-primary"></i>
+                <h5 class="card-title">Учет платежей</h5>
+                <p class="card-text">Контроль оплаты проживания, учет льгот, формирование финансовых отчетов и уведомлений.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
